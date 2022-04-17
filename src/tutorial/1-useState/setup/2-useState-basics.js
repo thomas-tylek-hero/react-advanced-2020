@@ -1,31 +1,42 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 // useState - function
 
-const UseStateBasics = () => {
-  // console.log(useState('hello world'));
-  // const value = useState(1)[0];
-  // const handler = useState(1)[1];
-  // console.log(value, handler);
-  const [text, setText] = useState('Random Title');
+const UseStateBasics = (props) => {
+  const [wordCache, setWordCache] = useState(['Random Title']);
 
-  const handleClick = () => {
-    fetch('https://random-word-api.herokuapp.com/word')
+  const fetchRandomWordBatch = async (size) => {
+    return fetch(`https://random-word-api.herokuapp.com/word/?number=${size}`)
       .then((response) => {
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
-
         return response.json();
-      })
-      .then((response) => {
-        setText(response[0]);
       })
       .catch((error) => console.log(error));
   };
 
+  useEffect(() => {
+    console.log(setWordCache);
+    fetchRandomWordBatch(20).then((wordArr) => {
+      setWordCache([...wordCache, ...wordArr]);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (wordCache.length < 6) {
+      fetchRandomWordBatch(20).then((wordArr) => {
+        setWordCache([...wordCache, ...wordArr]);
+      });
+    }
+  }, [wordCache]);
+
+  const handleClick = () => {
+    setWordCache(wordCache.slice(1));
+  };
+
   return (
     <>
-      <h2>{text}</h2>
+      <h2>{wordCache[0]}</h2>
       <button type='button' className='btn' onClick={handleClick}>
         Change Title
       </button>
